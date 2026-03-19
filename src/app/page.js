@@ -1,28 +1,36 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { api } from '@/lib/api'
 
 // ============================================================
 // НАСТРОЙКИ — МЕНЯЙ ПОД СВОЕГО МАСТЕРА
 // ============================================================
 const MASTER_INFO = {
-  name: 'Анна Иванова',
-  title: 'Мастер-парикмахер',
-  telegram: '@anna_hair',
-  phone: '+7 (999) 123-45-67',
+  name: 'Екатерина',
+  title: 'Мастер-парикмахер · колорист',
+  telegram: '@Ekaterina_Olegvna',
+  phone: '+7 (916) 665-63-83',
   address: 'г. Москва, ул. Примерная, д. 10, салон "Beauty"',
   workHours: 'Пн–Сб: 10:00 – 20:00',
-  photo: null, // можно добавить URL фото
+  photo: null,
 }
 
 const SERVICES = [
-  { id: 1, name: 'Женская стрижка', duration: '60 мин', price: '2 500 ₽' },
-  { id: 2, name: 'Мужская стрижка', duration: '40 мин', price: '1 500 ₽' },
-  { id: 3, name: 'Окрашивание', duration: '120 мин', price: '5 000 ₽' },
-  { id: 4, name: 'Укладка', duration: '40 мин', price: '1 800 ₽' },
-  { id: 5, name: 'Мелирование', duration: '150 мин', price: '6 000 ₽' },
-  { id: 6, name: 'Стрижка чёлки', duration: '15 мин', price: '500 ₽' },
+  // Color bar
+  { id: 1, name: 'Окрашивание корней', duration: '90 мин', price: '4 500 ₽' },
+  { id: 2, name: 'Классическое окрашивание S/M', duration: '120 мин', price: '6 000 ₽' },
+  { id: 3, name: 'Классическое окрашивание L', duration: '150 мин', price: '7 000 ₽' },
+  { id: 4, name: 'Экстра блонд S/M', duration: '180 мин', price: '7 000 ₽' },
+  { id: 5, name: 'Экстра блонд L', duration: '210 мин', price: '8 000 ₽' },
+  { id: 6, name: 'Трендовое окрашивание S/M', duration: '180 мин', price: '8 500 ₽' },
+  { id: 7, name: 'Трендовое окрашивание L', duration: '210 мин', price: '10 000 ₽' },
+  { id: 8, name: 'Тотальная перезагрузка цвета', duration: '240 мин', price: '10 500 ₽' },
+  { id: 9, name: 'Air Touch', duration: '240 мин', price: '12 500 ₽' },
+  // Creating a form
+  { id: 10, name: 'Стрижка с укладкой', duration: '60 мин', price: '3 000 ₽' },
+  { id: 11, name: 'Мужская стрижка', duration: '40 мин', price: '2 000 ₽' },
+  { id: 12, name: 'Укладка по форме', duration: '40 мин', price: '2 300 ₽' },
 ]
 
 const TIME_SLOTS = [
@@ -55,12 +63,8 @@ export default function HomePage() {
 
   async function fetchBookedSlots(date) {
     try {
-      const { data } = await supabase
-        .from('appointments')
-        .select('time')
-        .eq('date', date)
-
-      setBookedSlots(data?.map(a => a.time) || [])
+      const slots = await api.getBookedSlots(date)
+      setBookedSlots(slots || [])
     } catch (err) {
       console.error('Error fetching slots:', err)
     }
@@ -72,20 +76,17 @@ export default function HomePage() {
 
     try {
       const service = SERVICES.find(s => s.id === formData.service)
-      const { error: insertError } = await supabase
-        .from('appointments')
-        .insert({
-          client_name: formData.clientName,
-          telegram: formData.telegram,
-          service: service.name,
-          date: formData.date,
-          time: formData.time,
-        })
+      await api.createAppointment({
+        client_name: formData.clientName,
+        telegram: formData.telegram,
+        service: service.name,
+        date: formData.date,
+        time: formData.time,
+      })
 
-      if (insertError) throw insertError
       setSuccess(true)
     } catch (err) {
-      setError('Ошибка при записи. Попробуйте ещё раз.')
+      setError(err.message || 'Ошибка при записи. Попробуйте ещё раз.')
       console.error(err)
     } finally {
       setLoading(false)

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { api } from '@/lib/api'
 
 const MASTER_PIN = process.env.NEXT_PUBLIC_MASTER_PIN || '1234'
 
@@ -30,12 +30,7 @@ export default function MasterPage() {
   async function fetchDayAppointments(date) {
     setLoading(true)
     try {
-      const { data } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('date', date)
-        .order('time', { ascending: true })
-
+      const data = await api.getByDate(date)
       setAppointments(data || [])
     } catch (err) {
       console.error(err)
@@ -51,14 +46,10 @@ export default function MasterPage() {
       const end = new Date(start)
       end.setDate(end.getDate() + 6)
 
-      const { data } = await supabase
-        .from('appointments')
-        .select('*')
-        .gte('date', start.toISOString().split('T')[0])
-        .lte('date', end.toISOString().split('T')[0])
-        .order('date', { ascending: true })
-        .order('time', { ascending: true })
-
+      const data = await api.getByDateRange(
+        start.toISOString().split('T')[0],
+        end.toISOString().split('T')[0],
+      )
       setAppointments(data || [])
     } catch (err) {
       console.error(err)
@@ -69,7 +60,7 @@ export default function MasterPage() {
 
   async function deleteAppointment(id) {
     if (!confirm('Удалить запись?')) return
-    await supabase.from('appointments').delete().eq('id', id)
+    await api.deleteAppointment(id)
     // Refresh
     if (viewMode === 'day') {
       fetchDayAppointments(selectedDate)
