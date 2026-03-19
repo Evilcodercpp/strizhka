@@ -153,7 +153,7 @@ function CalendarTab() {
       </div>
 
       {/* Days grid */}
-      <div className="grid grid-cols-7 gap-1 mb-6">
+      <div className="grid grid-cols-7 gap-[6px] mb-6">
         {days.map((day, i) => {
           if (!day) return <div key={i} />
           const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
@@ -162,8 +162,9 @@ function CalendarTab() {
           const isSelected = dateStr === selectedDate
           return (
             <button key={i} onClick={() => setSelectedDate(dateStr)}
-              className={`relative aspect-square rounded-lg flex flex-col items-center justify-center text-sm transition-all
-                ${isSelected ? 'bg-[#B8926A] text-[#0E0E0E] font-semibold' : isToday ? 'border border-[#B8926A]/50 text-[#B8926A]' : 'text-white/60 hover:bg-white/5'}`}>
+              style={{ minHeight: '44px' }}
+              className={`relative rounded-lg flex flex-col items-center justify-center text-sm transition-all active:scale-95
+                ${isSelected ? 'bg-[#B8926A] text-[#0E0E0E] font-semibold' : isToday ? 'border border-[#B8926A]/50 text-[#B8926A]' : 'text-white/60 hover:bg-white/5 active:bg-white/10'}`}>
               {day}
               {count > 0 && (
                 <div className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-[#0E0E0E]' : 'bg-[#B8926A]'}`} />
@@ -302,6 +303,7 @@ function ServicesTab() {
   const [form, setForm] = useState({ name: '', duration: '', price: '', category: 'color' })
   const [editId, setEditId] = useState(null)
   const [editForm, setEditForm] = useState({})
+  const [seeding, setSeeding] = useState(false)
 
   useEffect(() => { loadServices() }, [])
 
@@ -326,9 +328,42 @@ function ServicesTab() {
     loadServices()
   }
 
+  async function seedDefaults() {
+    if (!confirm('Загрузить стандартные услуги? Существующие не удалятся.')) return
+    setSeeding(true)
+    const defaults = [
+      { name: 'Окрашивание корней', duration: '90 мин', price: '4 500 ₽', category: 'color' },
+      { name: 'Классическое окрашивание S/M', duration: '120 мин', price: '6 000 ₽', category: 'color' },
+      { name: 'Классическое окрашивание L', duration: '150 мин', price: '7 000 ₽', category: 'color' },
+      { name: 'Экстра блонд S/M', duration: '180 мин', price: '7 000 ₽', category: 'color' },
+      { name: 'Экстра блонд L', duration: '210 мин', price: '8 000 ₽', category: 'color' },
+      { name: 'Трендовое окрашивание S/M', duration: '180 мин', price: '8 500 ₽', category: 'color' },
+      { name: 'Трендовое окрашивание L', duration: '210 мин', price: '10 000 ₽', category: 'color' },
+      { name: 'Тотальная перезагрузка цвета', duration: '240 мин', price: '10 500 ₽', category: 'color' },
+      { name: 'Air Touch', duration: '240 мин', price: '12 500 ₽', category: 'color' },
+      { name: 'Стрижка с укладкой', duration: '60 мин', price: '3 000 ₽', category: 'cut' },
+      { name: 'Мужская стрижка', duration: '40 мин', price: '2 000 ₽', category: 'cut' },
+      { name: 'Укладка по форме', duration: '40 мин', price: '2 300 ₽', category: 'cut' },
+    ]
+    for (const s of defaults) {
+      try { await api.createService(s) } catch(e) {}
+    }
+    await loadServices()
+    setSeeding(false)
+  }
+
   return (
     <div className="fade-up">
-      <h2 className="font-[Cormorant_Garamond] text-2xl mb-5">Управление услугами</h2>
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="font-[Cormorant_Garamond] text-2xl">Управление услугами</h2>
+        {services.length === 0 && (
+          <button onClick={seedDefaults} disabled={seeding}
+            style={{ touchAction: 'manipulation' }}
+            className="px-4 py-2 text-xs border border-[#B8926A]/30 text-[#B8926A] rounded-lg hover:bg-[#B8926A]/10 active:bg-[#B8926A]/20 transition-all">
+            {seeding ? 'Загрузка...' : 'Загрузить стандартные'}
+          </button>
+        )}
+      </div>
 
       {/* Add form */}
       <div className="glass rounded-xl p-4 mb-6 space-y-3">
@@ -404,6 +439,7 @@ function ServicesTab() {
 function DatesTab() {
   const [dates, setDates] = useState([])
   const [monthOffset, setMonthOffset] = useState(0)
+  const [toggling, setToggling] = useState(null)
 
   useEffect(() => { loadDates() }, [])
 
@@ -429,12 +465,19 @@ function DatesTab() {
 
   async function toggleDate(day) {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    if (dates.includes(dateStr)) {
-      await api.removeAvailableDate(dateStr)
-    } else {
-      await api.addAvailableDate(dateStr)
+    setToggling(dateStr)
+    try {
+      if (dates.includes(dateStr)) {
+        await api.removeAvailableDate(dateStr)
+        setDates(prev => prev.filter(d => d !== dateStr))
+      } else {
+        await api.addAvailableDate(dateStr)
+        setDates(prev => [...prev, dateStr])
+      }
+    } catch (e) {
+      console.error('Toggle error:', e)
     }
-    loadDates()
+    setToggling(null)
   }
 
   const days = getDaysInMonth()
@@ -448,10 +491,10 @@ function DatesTab() {
 
       <div className="flex items-center justify-between mb-5">
         <button onClick={() => setMonthOffset(m => m - 1)}
-          className="w-9 h-9 rounded-lg border border-white/10 flex items-center justify-center text-white/40 hover:text-white/70 transition-all">‹</button>
+          className="w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center text-white/40 hover:text-white/70 active:bg-white/10 transition-all">‹</button>
         <h3 className="text-sm font-medium capitalize">{monthName}</h3>
         <button onClick={() => setMonthOffset(m => m + 1)}
-          className="w-9 h-9 rounded-lg border border-white/10 flex items-center justify-center text-white/40 hover:text-white/70 transition-all">›</button>
+          className="w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center text-white/40 hover:text-white/70 active:bg-white/10 transition-all">›</button>
       </div>
 
       <div className="grid grid-cols-7 gap-1 mb-1">
@@ -459,19 +502,23 @@ function DatesTab() {
           <div key={d} className="text-center text-white/25 text-xs py-1">{d}</div>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-[6px]">
         {days.map((day, i) => {
           if (!day) return <div key={i} />
           const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
           const isAvailable = dates.includes(dateStr)
           const isPast = dateStr < todayStr
+          const isLoading = toggling === dateStr
           return (
-            <button key={i} onClick={() => !isPast && toggleDate(day)}
-              disabled={isPast}
-              className={`aspect-square rounded-lg flex items-center justify-center text-sm transition-all
+            <button key={i}
+              onClick={() => !isPast && !isLoading && toggleDate(day)}
+              disabled={isPast || isLoading}
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', minHeight: '44px' }}
+              className={`rounded-lg flex items-center justify-center text-sm font-medium transition-all active:scale-95
                 ${isPast ? 'text-white/10 cursor-not-allowed' :
+                  isLoading ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 animate-pulse' :
                   isAvailable ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-                  'text-white/40 hover:bg-white/5 border border-transparent'}`}>
+                  'text-white/40 hover:bg-white/5 active:bg-white/10 border border-white/10'}`}>
               {day}
             </button>
           )
