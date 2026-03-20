@@ -2,11 +2,11 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
 export const api = {
   // === Appointments ===
-  async createAppointment({ client_name, telegram, service, date, time }) {
+  async createAppointment({ client_name, telegram, phone, service, date, time }) {
     const res = await fetch(`${API_URL}/api/appointments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_name, telegram, service, date, time }),
+      body: JSON.stringify({ client_name, telegram, phone, service, date, time }),
     })
     if (!res.ok) {
       const err = await res.json()

@@ -191,7 +191,11 @@ function CalendarTab() {
                     <div className="bg-[#B8926A]/10 rounded-lg px-3 py-1.5 text-[#B8926A] font-medium text-sm">{a.time}</div>
                     <div>
                       <p className="text-sm font-medium">{a.client_name}</p>
-                      <p className="text-xs text-white/40">{a.service} · <a href={`https://t.me/${a.telegram.replace('@','')}`} target="_blank" className="text-[#B8926A]">{a.telegram}</a></p>
+                      <p className="text-xs text-white/40">
+                        {a.service}
+                        {a.telegram && <> · <a href={`https://t.me/${a.telegram.replace('@','')}`} target="_blank" className="text-[#B8926A]">{a.telegram}</a></>}
+                        {a.phone && <> · <a href={`tel:${a.phone}`} className="text-[#B8926A]">{a.phone}</a></>}
+                      </p>
                     </div>
                   </div>
                   <button onClick={() => deleteApt(a.id)}
@@ -214,7 +218,7 @@ function CalendarTab() {
 function AddClientTab() {
   const [services, setServices] = useState([])
   const [availDates, setAvailDates] = useState([])
-  const [form, setForm] = useState({ client_name: '', telegram: '', service: '', date: '', time: '' })
+  const [form, setForm] = useState({ client_name: '', telegram: '', phone: '', service: '', date: '', time: '' })
   const [bookedSlots, setBookedSlots] = useState([])
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
@@ -233,7 +237,7 @@ function AddClientTab() {
     try {
       await api.createAppointment(form)
       setMsg('Клиент записан!')
-      setForm({ client_name: '', telegram: '', service: '', date: '', time: '' })
+      setForm({ client_name: '', telegram: '', phone: '', service: '', date: '', time: '' })
     } catch (e) { setMsg('Ошибка: ' + e.message) }
     finally { setLoading(false) }
   }
@@ -253,6 +257,11 @@ function AddClientTab() {
         <label className="text-white/40 text-xs mb-1 block">Telegram</label>
         <input type="text" value={form.telegram} onChange={e => setForm({...form, telegram: e.target.value})}
           placeholder="@username" className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm" />
+      </div>
+      <div>
+        <label className="text-white/40 text-xs mb-1 block">Телефон</label>
+        <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
+          placeholder="+7 (___) ___-__-__" className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm" />
       </div>
       <div>
         <label className="text-white/40 text-xs mb-1 block">Услуга</label>
@@ -289,7 +298,7 @@ function AddClientTab() {
       )}
       {msg && <p className={`text-sm ${msg.startsWith('Ошибка') ? 'text-red-400' : 'text-green-400'}`}>{msg}</p>}
       <button onClick={handleAdd}
-        disabled={!form.client_name || !form.telegram || !form.service || !form.date || !form.time || loading}
+        disabled={!form.client_name || (!form.telegram && !form.phone) || !form.service || !form.date || !form.time || loading}
         className="w-full py-3 gold-gradient text-[#0E0E0E] font-semibold text-sm rounded-xl disabled:opacity-30 transition-all">
         {loading ? 'Сохраняем...' : 'Записать клиента'}
       </button>
@@ -332,18 +341,21 @@ function ServicesTab() {
     if (!confirm('Загрузить стандартные услуги? Существующие не удалятся.')) return
     setSeeding(true)
     const defaults = [
-      { name: 'Окрашивание корней', duration: '90 мин', price: '4 500 ₽', category: 'color' },
-      { name: 'Классическое окрашивание S/M', duration: '120 мин', price: '6 000 ₽', category: 'color' },
-      { name: 'Классическое окрашивание L', duration: '150 мин', price: '7 000 ₽', category: 'color' },
-      { name: 'Экстра блонд S/M', duration: '180 мин', price: '7 000 ₽', category: 'color' },
-      { name: 'Экстра блонд L', duration: '210 мин', price: '8 000 ₽', category: 'color' },
-      { name: 'Трендовое окрашивание S/M', duration: '180 мин', price: '8 500 ₽', category: 'color' },
-      { name: 'Трендовое окрашивание L', duration: '210 мин', price: '10 000 ₽', category: 'color' },
-      { name: 'Тотальная перезагрузка цвета', duration: '240 мин', price: '10 500 ₽', category: 'color' },
-      { name: 'Air Touch', duration: '240 мин', price: '12 500 ₽', category: 'color' },
-      { name: 'Стрижка с укладкой', duration: '60 мин', price: '3 000 ₽', category: 'cut' },
-      { name: 'Мужская стрижка', duration: '40 мин', price: '2 000 ₽', category: 'cut' },
-      { name: 'Укладка по форме', duration: '40 мин', price: '2 300 ₽', category: 'cut' },
+      { name: 'Окрашивание корней', duration: '~90 мин', price: '4 500 ₽', category: 'color' },
+      { name: 'Окрашивание корней + Блики', duration: '~210 мин', price: '6 000 ₽', category: 'color' },
+      { name: 'Классическое окрашивание S/M', duration: '~140 мин', price: '6 000 ₽', category: 'color' },
+      { name: 'Классическое окрашивание L', duration: '~150 мин', price: '7 000 ₽', category: 'color' },
+      { name: 'Экстра блонд S/M', duration: '~180 мин', price: '7 000 ₽', category: 'color' },
+      { name: 'Экстра блонд L', duration: '~210 мин', price: '8 000 ₽', category: 'color' },
+      { name: 'Шатуш', duration: '~120 мин', price: '5 000 ₽', category: 'color' },
+      { name: 'Трендовое окрашивание S/M', duration: 'индивидуально', price: 'от 8 500 ₽', category: 'color' },
+      { name: 'Трендовое окрашивание L', duration: 'индивидуально', price: 'от 10 000 ₽', category: 'color' },
+      { name: 'Тотальная перезагрузка цвета', duration: 'индивидуально', price: 'от 10 500 ₽', category: 'color' },
+      { name: 'Индивидуальное окрашивание / Air Touch', duration: 'индивидуально', price: 'от 12 500 ₽', category: 'color' },
+      { name: 'Стрижка с укладкой', duration: '~60 мин', price: '3 000 ₽', category: 'cut' },
+      { name: 'Мужская стрижка', duration: '~80 мин', price: '2 000 ₽', category: 'cut' },
+      { name: 'Укладка', duration: '~60 мин', price: '2 300 ₽', category: 'cut' },
+      { name: 'Окантовка к любой услуге', duration: 'индивидуально', price: '1 000 ₽', category: 'cut' },
     ]
     for (const s of defaults) {
       try { await api.createService(s) } catch(e) {}
@@ -552,7 +564,8 @@ function TableTab() {
   const filtered = filter
     ? appointments.filter(a =>
         a.client_name.toLowerCase().includes(filter.toLowerCase()) ||
-        a.telegram.toLowerCase().includes(filter.toLowerCase()) ||
+        (a.telegram || '').toLowerCase().includes(filter.toLowerCase()) ||
+        (a.phone || '').toLowerCase().includes(filter.toLowerCase()) ||
         a.service.toLowerCase().includes(filter.toLowerCase())
       )
     : appointments
@@ -584,10 +597,11 @@ function TableTab() {
             <div key={a.id} className="glass-light rounded-xl p-4">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-sm">{a.client_name}</span>
-                    <a href={`https://t.me/${a.telegram.replace('@','')}`} target="_blank"
-                      className="text-[#B8926A] text-xs">{a.telegram}</a>
+                    {a.telegram && <a href={`https://t.me/${a.telegram.replace('@','')}`} target="_blank"
+                      className="text-[#B8926A] text-xs">{a.telegram}</a>}
+                    {a.phone && <a href={`tel:${a.phone}`} className="text-[#B8926A] text-xs">{a.phone}</a>}
                   </div>
                   <p className="text-xs text-white/40">{a.service}</p>
                   <p className="text-xs text-white/30">
