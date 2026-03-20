@@ -272,12 +272,12 @@ export default function HomePage() {
 
 function ServiceCard({ s }) {
   return (
-    <div className="flex justify-between items-start gap-3 py-3 px-4 rounded-xl bg-white/[0.02] border border-white/5">
-      <div className="min-w-0">
+    <div className="py-3 px-4 rounded-xl bg-white/[0.02] border border-white/5">
+      <div className="flex justify-between items-baseline gap-2">
         <span className="text-white/80 text-sm">{s.name}</span>
-        <span className="text-white/25 text-xs ml-1 whitespace-nowrap">· {s.duration}</span>
+        <span className="text-[#B8926A] text-sm font-medium whitespace-nowrap">{s.price}</span>
       </div>
-      <span className="text-[#B8926A] text-sm font-medium whitespace-nowrap flex-shrink-0">{s.price}</span>
+      <span className="text-white/25 text-xs">{s.duration}</span>
     </div>
   )
 }
@@ -287,10 +287,11 @@ function ServiceSelect({ s, selected, onClick }) {
     <button onClick={onClick} style={{touchAction:'manipulation'}}
       className={`w-full text-left p-4 rounded-xl border transition-all active:scale-[0.98] text-sm
         ${selected?'border-[#B8926A] bg-[#B8926A]/10':'border-white/8 hover:border-white/15 bg-white/[0.02]'}`}>
-      <div className="flex justify-between items-start gap-3">
-        <div className="min-w-0"><span className="text-white/90">{s.name}</span><span className="text-white/30 text-xs ml-1 whitespace-nowrap">· {s.duration}</span></div>
-        <span className="text-[#B8926A] font-medium whitespace-nowrap flex-shrink-0">{s.price}</span>
+      <div className="flex justify-between items-baseline gap-2">
+        <span className="text-white/90">{s.name}</span>
+        <span className="text-[#B8926A] font-medium whitespace-nowrap">{s.price}</span>
       </div>
+      <span className="text-white/30 text-xs">{s.duration}</span>
     </button>
   )
 }
