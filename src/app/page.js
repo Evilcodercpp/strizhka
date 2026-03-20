@@ -277,7 +277,7 @@ function ServiceCard({ s }) {
         <span className="text-white/80 text-sm">{s.name}</span>
         <span className="text-[#B8926A] text-sm font-medium whitespace-nowrap">{s.price}</span>
       </div>
-      <span className="text-white/25 text-xs">{s.duration}</span>
+      <span className="text-white/25 text-xs whitespace-nowrap">{s.duration}</span>
     </div>
   )
 }
@@ -291,7 +291,7 @@ function ServiceSelect({ s, selected, onClick }) {
         <span className="text-white/90">{s.name}</span>
         <span className="text-[#B8926A] font-medium whitespace-nowrap">{s.price}</span>
       </div>
-      <span className="text-white/30 text-xs">{s.duration}</span>
+      <span className="text-white/30 text-xs whitespace-nowrap">{s.duration}</span>
     </button>
   )
 }

@@ -361,47 +361,172 @@ function ClientsTab() {
 function SuppliesTab() {
   const [sub, setSub] = useState('paint')
   const [items, setItems] = useState([])
-  const [f, setF] = useState({type:'paint',brand:'',name:'',quantity:0,price:'',comment:''})
+  const [f, setF] = useState({type:'paint',brand:'',name:'',quantity:0,price:'',comment:'',color:'#B8926A'})
   const [editId, setEditId] = useState(null)
   const [ef, setEf] = useState({})
+  const [qLoading, setQLoading] = useState(null)
   useEffect(()=>{load()},[sub])
   async function load(){setItems(await api.getSuppliesByType(sub))}
-  async function add(){if(!f.brand||!f.name)return;await api.createSupply({...f,type:sub});setF({...f,brand:'',name:'',quantity:0,price:'',comment:''});load()}
+  async function add(){
+    if(!f.brand||!f.name)return
+    await api.createSupply({...f,type:sub})
+    setF({...f,brand:'',name:'',quantity:0,price:'',comment:'',color:'#B8926A'})
+    load()
+  }
   async function upd(){await api.updateSupply(editId,ef);setEditId(null);load()}
   async function del(id){if(!confirm('Удалить?'))return;await api.deleteSupply(id);load()}
+  async function changeQty(item, newVal) {
+    const newQty = Math.max(0, newVal)
+    setQLoading(item.id)
+    await api.updateSupply(item.id, {...item, quantity: newQty})
+    setItems(prev => prev.map(i => i.id===item.id ? {...i, quantity: newQty} : i))
+    setQLoading(null)
+  }
   const brands=[...new Set(items.map(i=>i.brand))].sort()
+  const lowPaint = items.filter(i=>i.quantity<50)
   return (
     <div className="fade-up">
-      <h2 className="font-[Cormorant_Garamond] text-2xl mb-4">Расходники</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-[Cormorant_Garamond] text-2xl">Расходники</h2>
+        {lowPaint.length>0&&<span className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full">⚠ мало: {lowPaint.length}</span>}
+      </div>
+
+      {/* Sub-tabs */}
       <div className="flex gap-2 mb-5">
-        <button onClick={()=>setSub('paint')} className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${sub==='paint'?'gold-gradient text-[#0E0E0E]':'border border-white/10 text-white/50'}`}>Краски</button>
-        <button onClick={()=>setSub('material')} className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${sub==='material'?'gold-gradient text-[#0E0E0E]':'border border-white/10 text-white/50'}`}>Материалы</button>
+        {['paint','palette','material'].map((t,i)=>{
+          const labels={paint:'Краски',palette:'Палитра',material:'Материалы'}
+          return <button key={t} onClick={()=>setSub(t)} className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${sub===t?'gold-gradient text-[#0E0E0E]':'border border-white/10 text-white/50'}`}>{labels[t]}</button>
+        })}
       </div>
-      <div className="glass rounded-xl p-4 mb-5 space-y-3">
-        <p className="text-white/40 text-xs">Добавить {sub==='paint'?'краску':'материал'}</p>
-        <div className="grid grid-cols-2 gap-2"><Input v={f.brand} set={v=>setF({...f,brand:v})} ph="Бренд"/><Input v={f.name} set={v=>setF({...f,name:v})} ph="Название"/></div>
-        <div className="grid grid-cols-2 gap-2"><Input v={String(f.quantity)} set={v=>setF({...f,quantity:parseInt(v)||0})} ph="Кол-во" type="number"/><Input v={f.price} set={v=>setF({...f,price:v})} ph="Стоимость"/></div>
-        <Input v={f.comment} set={v=>setF({...f,comment:v})} ph="Комментарий"/>
-        <button onClick={add} className="w-full py-2.5 gold-gradient text-[#0E0E0E] font-semibold text-sm rounded-lg">Добавить</button>
-      </div>
-      {brands.length===0?<p className="text-white/20 text-sm text-center py-8">Пусто</p>:
-      brands.map(brand=><div key={brand} className="mb-6">
-        <p className="text-[#B8926A] text-xs tracking-[0.15em] uppercase mb-2">{brand}</p>
-        <div className="space-y-2">{items.filter(i=>i.brand===brand).map(item=><div key={item.id} className="glass-light rounded-xl p-4">
-          {editId===item.id?<div className="space-y-2">
-            <div className="grid grid-cols-2 gap-2"><Input v={ef.brand} set={v=>setEf({...ef,brand:v})} ph="Бренд"/><Input v={ef.name} set={v=>setEf({...ef,name:v})} ph="Название"/></div>
-            <div className="grid grid-cols-2 gap-2"><Input v={String(ef.quantity)} set={v=>setEf({...ef,quantity:parseInt(v)||0})} ph="Кол-во" type="number"/><Input v={ef.price} set={v=>setEf({...ef,price:v})} ph="Цена"/></div>
-            <Input v={ef.comment} set={v=>setEf({...ef,comment:v})} ph="Комментарий"/>
-            <div className="flex gap-2"><button onClick={upd} className="flex-1 py-2 bg-[#B8926A] text-[#0E0E0E] text-sm rounded-lg font-medium">Сохранить</button>
-            <button onClick={()=>setEditId(null)} className="px-4 py-2 border border-white/10 text-white/50 text-sm rounded-lg">Отмена</button></div>
-          </div>:<div className="flex items-start justify-between">
-            <div className="space-y-0.5"><p className="text-sm">{item.name}</p>
-              <p className="text-xs text-white/40">Кол-во: <span className={item.quantity<3?'text-red-400':'text-white/60'}>{item.quantity}</span>{item.price&&` · ${item.price}`}</p>
-              {item.comment&&<p className="text-xs text-white/25 italic">{item.comment}</p>}
+
+      {/* PALETTE VIEW */}
+      {sub==='palette'&&<PaletteView/>}
+
+      {/* ADD FORM — only for paint/material */}
+      {sub!=='palette'&&<>
+        <div className="glass rounded-xl p-4 mb-5 space-y-3">
+          <p className="text-white/40 text-xs">Добавить {sub==='paint'?'краску':'материал'}</p>
+          <div className="grid grid-cols-2 gap-2">
+            <Input v={f.brand} set={v=>setF({...f,brand:v})} ph="Бренд"/>
+            <Input v={f.name} set={v=>setF({...f,name:v})} ph="Название / оттенок"/>
+          </div>
+          {sub==='paint'&&(
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <label className="text-white/40 text-xs mb-1 block">Цвет оттенка</label>
+                <input type="color" value={f.color||'#B8926A'} onChange={e=>setF({...f,color:e.target.value})}
+                  className="w-full h-10 rounded-lg border border-white/10 bg-white/5 cursor-pointer px-1"/>
+              </div>
+              <div className="flex-shrink-0 mt-5">
+                <div className="w-10 h-10 rounded-full border-2 border-white/20" style={{background:f.color||'#B8926A'}}/>
+              </div>
             </div>
-            <div className="flex gap-1"><SmBtn onClick={()=>{setEditId(item.id);setEf({...item})}} icon="edit"/><SmBtn onClick={()=>del(item.id)} icon="x" danger/></div>
-          </div>}
-        </div>)}</div>)}
+          )}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-white/40 text-xs mb-1 block">{sub==='paint'?'Граммы (г)':'Количество'}</label>
+              <input type="number" value={f.quantity} onChange={e=>setF({...f,quantity:parseInt(e.target.value)||0})} min="0"
+                className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm"/>
+            </div>
+            <Input v={f.price} set={v=>setF({...f,price:v})} ph="Стоимость" l="Стоимость"/>
+          </div>
+          <Input v={f.comment} set={v=>setF({...f,comment:v})} ph="Комментарий"/>
+          <button onClick={add} className="w-full py-2.5 gold-gradient text-[#0E0E0E] font-semibold text-sm rounded-lg">Добавить</button>
+        </div>
+
+        {/* LIST */}
+        {brands.length===0?<p className="text-white/20 text-sm text-center py-8">Пусто</p>:
+        brands.map(brand=><div key={brand} className="mb-6">
+          <p className="text-[#B8926A] text-xs tracking-[0.15em] uppercase mb-2">{brand}</p>
+          <div className="space-y-2">{items.filter(i=>i.brand===brand).map(item=><div key={item.id} className="glass-light rounded-xl p-4">
+            {editId===item.id?<div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <Input v={ef.brand} set={v=>setEf({...ef,brand:v})} ph="Бренд"/>
+                <Input v={ef.name} set={v=>setEf({...ef,name:v})} ph="Название"/>
+              </div>
+              {sub==='paint'&&(
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <label className="text-white/40 text-xs mb-1 block">Цвет оттенка</label>
+                    <input type="color" value={ef.color||'#B8926A'} onChange={e=>setEf({...ef,color:e.target.value})}
+                      className="w-full h-10 rounded-lg border border-white/10 bg-white/5 cursor-pointer px-1"/>
+                  </div>
+                  <div className="w-10 h-10 rounded-full border-2 border-white/20 mt-5 flex-shrink-0" style={{background:ef.color||'#B8926A'}}/>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-white/40 text-xs mb-1 block">{sub==='paint'?'Граммы (г)':'Количество'}</label>
+                  <input type="number" value={ef.quantity||0} onChange={e=>setEf({...ef,quantity:parseInt(e.target.value)||0})} min="0"
+                    className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm"/>
+                </div>
+                <Input v={ef.price||''} set={v=>setEf({...ef,price:v})} ph="Цена" l="Цена"/>
+              </div>
+              <Input v={ef.comment||''} set={v=>setEf({...ef,comment:v})} ph="Комментарий"/>
+              <div className="flex gap-2">
+                <button onClick={upd} className="flex-1 py-2 bg-[#B8926A] text-[#0E0E0E] text-sm rounded-lg font-medium">Сохранить</button>
+                <button onClick={()=>setEditId(null)} className="px-4 py-2 border border-white/10 text-white/50 text-sm rounded-lg">Отмена</button>
+              </div>
+            </div>:<div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                {sub==='paint'&&<div className="w-8 h-8 rounded-full border border-white/20 flex-shrink-0" style={{background:item.color||'#888'}}/>}
+                <div className="min-w-0">
+                  <p className="text-sm truncate">{item.name}</p>
+                  {item.price&&<p className="text-xs text-white/30">{item.price}</p>}
+                  {item.comment&&<p className="text-xs text-white/25 italic truncate">{item.comment}</p>}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Quantity controls */}
+                <div className="flex items-center gap-1">
+                  <button onClick={()=>changeQty(item, item.quantity-10)} disabled={item.quantity===0||qLoading===item.id}
+                    style={{touchAction:'manipulation'}}
+                    className="w-7 h-7 rounded-lg border border-white/10 flex items-center justify-center text-white/30 hover:text-white hover:border-white/30 active:scale-90 disabled:opacity-20 transition-all text-xs">−10</button>
+                  <div className="text-center px-1">
+                    <span className={`text-sm font-semibold tabular-nums ${item.quantity===0?'text-red-400':item.quantity<50?'text-yellow-400':'text-white/80'}`}>
+                      {qLoading===item.id?'…':item.quantity}
+                    </span>
+                    {sub==='paint'&&<span className="text-white/30 text-xs">г</span>}
+                  </div>
+                  <button onClick={()=>changeQty(item, item.quantity+10)} disabled={qLoading===item.id}
+                    style={{touchAction:'manipulation'}}
+                    className="w-7 h-7 rounded-lg border border-white/10 flex items-center justify-center text-white/30 hover:text-white hover:border-white/30 active:scale-90 disabled:opacity-20 transition-all text-xs">+10</button>
+                </div>
+                <SmBtn onClick={()=>{setEditId(item.id);setEf({...item})}} icon="edit"/>
+                <SmBtn onClick={()=>del(item.id)} icon="x" danger/>
+              </div>
+            </div>}
+          </div>)}</div>)}
+      </>}
+    </div>
+  )
+}
+
+/* ==================== PALETTE VIEW ==================== */
+function PaletteView() {
+  const [paints, setPaints] = useState([])
+  useEffect(()=>{api.getSuppliesByType('paint').then(setPaints)},[])
+  const brands=[...new Set(paints.map(i=>i.brand))].sort()
+  if(paints.length===0) return <p className="text-white/20 text-sm text-center py-12">Добавьте краски во вкладке «Краски»</p>
+  return (
+    <div className="space-y-6">
+      {brands.map(brand=>(
+        <div key={brand}>
+          <p className="text-[#B8926A] text-xs tracking-[0.15em] uppercase mb-3">{brand}</p>
+          <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
+            {paints.filter(p=>p.brand===brand).map(p=>(
+              <div key={p.id} className="flex flex-col items-center gap-1.5">
+                <div className="w-12 h-12 rounded-full border-2 border-white/20 shadow-lg"
+                  style={{background:p.color||'#888888',boxShadow:`0 4px 12px ${p.color||'#888888'}40`}}/>
+                <p className="text-xs text-white/60 text-center leading-tight break-words w-full">{p.name}</p>
+                <p className={`text-xs font-medium tabular-nums ${p.quantity===0?'text-red-400':p.quantity<50?'text-yellow-400':'text-white/40'}`}>
+                  {p.quantity}г
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
