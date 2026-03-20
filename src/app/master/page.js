@@ -1,10 +1,9 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { api } from '@/lib/api'
 
-const MASTER_PIN = process.env.NEXT_PUBLIC_MASTER_PIN || '1234'
-const TIME_SLOTS = ['10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00']
+const PIN = process.env.NEXT_PUBLIC_MASTER_PIN || '1234'
+const SLOTS = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00']
 
 export default function MasterPage() {
   const [auth, setAuth] = useState(false)
@@ -12,44 +11,31 @@ export default function MasterPage() {
   const [pinErr, setPinErr] = useState(false)
   const [tab, setTab] = useState('calendar')
 
-  function handleLogin(e) {
-    e.preventDefault()
-    if (pin === MASTER_PIN) { setAuth(true); setPinErr(false) }
-    else setPinErr(true)
-  }
+  function login(e) { e.preventDefault(); if (pin===PIN){setAuth(true);setPinErr(false)} else setPinErr(true) }
 
-  if (!auth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-5">
-        <form onSubmit={handleLogin} className="w-full max-w-xs fade-up">
-          <div className="glass rounded-2xl p-8 text-center">
-            <div className="w-12 h-12 mx-auto mb-5 rounded-full bg-[#B8926A]/10 flex items-center justify-center">
-              <svg className="w-6 h-6 text-[#B8926A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            </div>
-            <h1 className="font-[Cormorant_Garamond] text-2xl mb-1">Панель мастера</h1>
-            <p className="text-white/30 text-sm mb-6">Введите PIN-код</p>
-            <input type="password" value={pin} onChange={e => { setPin(e.target.value); setPinErr(false) }}
-              placeholder="••••" maxLength={8} autoFocus
-              className={`w-full px-4 py-3 rounded-xl bg-white/5 border text-center text-2xl tracking-[0.5em] text-white
-                ${pinErr ? 'border-red-500/50' : 'border-white/10'}`} />
-            {pinErr && <p className="text-red-400 text-xs mt-2">Неверный PIN</p>}
-            <button type="submit" className="w-full mt-4 py-3 gold-gradient text-[#0E0E0E] font-semibold text-sm rounded-xl">
-              Войти
-            </button>
+  if (!auth) return (
+    <div className="min-h-screen flex items-center justify-center p-5">
+      <form onSubmit={login} className="w-full max-w-xs fade-up">
+        <div className="glass rounded-2xl p-8 text-center">
+          <div className="w-12 h-12 mx-auto mb-5 rounded-full bg-[#B8926A]/10 flex items-center justify-center">
+            <svg className="w-6 h-6 text-[#B8926A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
           </div>
-        </form>
-      </div>
-    )
-  }
+          <h1 className="font-[Cormorant_Garamond] text-2xl mb-1">Панель мастера</h1>
+          <p className="text-white/30 text-sm mb-6">Введите PIN-код</p>
+          <input type="password" value={pin} onChange={e=>{setPin(e.target.value);setPinErr(false)}} placeholder="••••" maxLength={8} autoFocus
+            className={`w-full px-4 py-3 rounded-xl bg-white/5 border text-center text-2xl tracking-[0.5em] text-white ${pinErr?'border-red-500/50':'border-white/10'}`} />
+          {pinErr && <p className="text-red-400 text-xs mt-2">Неверный PIN</p>}
+          <button type="submit" className="w-full mt-4 py-3 gold-gradient text-[#0E0E0E] font-semibold text-sm rounded-xl">Войти</button>
+        </div>
+      </form>
+    </div>
+  )
 
-  const tabs = [
-    { id: 'calendar', label: 'Календарь' },
-    { id: 'add', label: 'Добавить' },
-    { id: 'services', label: 'Услуги' },
-    { id: 'dates', label: 'Даты' },
-    { id: 'table', label: 'Все записи' },
+  const tabs=[
+    {id:'calendar',l:'Календарь'},{id:'add',l:'Записать'},{id:'services',l:'Услуги'},
+    {id:'dates',l:'Даты'},{id:'records',l:'Записи'},{id:'clients',l:'Клиенты'},{id:'supplies',l:'Расходники'},
   ]
 
   return (
@@ -57,568 +43,405 @@ export default function MasterPage() {
       <header className="sticky top-0 z-50 glass">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <h1 className="font-[Cormorant_Garamond] text-lg">Панель мастера</h1>
-          <a href="/" className="text-white/30 text-xs hover:text-white/60 transition-colors">← на сайт</a>
+          <a href="/" className="text-white/30 text-xs hover:text-white/60">← на сайт</a>
         </div>
         <div className="max-w-3xl mx-auto px-4 flex gap-1 overflow-x-auto pb-0 scrollbar-hide">
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`px-3 py-2.5 text-sm whitespace-nowrap transition-all border-b-2
-                ${tab === t.id ? 'text-[#B8926A] border-[#B8926A]' : 'text-white/40 border-transparent hover:text-white/60'}`}>
-              {t.label}
-            </button>
+          {tabs.map(t=>(
+            <button key={t.id} onClick={()=>setTab(t.id)}
+              className={`px-3 py-2.5 text-sm whitespace-nowrap border-b-2 transition-all
+                ${tab===t.id?'text-[#B8926A] border-[#B8926A]':'text-white/40 border-transparent hover:text-white/60'}`}>{t.l}</button>
           ))}
         </div>
       </header>
-
       <div className="max-w-3xl mx-auto px-4 py-6">
-        {tab === 'calendar' && <CalendarTab />}
-        {tab === 'add' && <AddClientTab />}
-        {tab === 'services' && <ServicesTab />}
-        {tab === 'dates' && <DatesTab />}
-        {tab === 'table' && <TableTab />}
+        {tab==='calendar'&&<CalendarTab/>}
+        {tab==='add'&&<AddTab/>}
+        {tab==='services'&&<ServicesTab/>}
+        {tab==='dates'&&<DatesTab/>}
+        {tab==='records'&&<RecordsTab/>}
+        {tab==='clients'&&<ClientsTab/>}
+        {tab==='supplies'&&<SuppliesTab/>}
       </div>
     </div>
   )
 }
 
-// ==================== CALENDAR TAB ====================
+/* ==================== CALENDAR ==================== */
 function CalendarTab() {
-  const [monthOffset, setMonthOffset] = useState(0)
-  const [appointments, setAppointments] = useState([])
-  const [selectedDate, setSelectedDate] = useState(null)
-  const [dayAppts, setDayAppts] = useState([])
-
+  const [mo, setMo] = useState(0)
+  const [apts, setApts] = useState([])
+  const [sel, setSel] = useState(null)
   const now = new Date()
-  const viewMonth = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1)
-  const year = viewMonth.getFullYear()
-  const month = viewMonth.getMonth()
-
-  useEffect(() => {
-    const start = new Date(year, month, 1).toISOString().split('T')[0]
-    const end = new Date(year, month + 1, 0).toISOString().split('T')[0]
-    api.getByDateRange(start, end).then(setAppointments)
-  }, [year, month])
-
-  useEffect(() => {
-    if (selectedDate) {
-      setDayAppts(appointments.filter(a => a.date === selectedDate))
-    }
-  }, [selectedDate, appointments])
-
-  function getDaysInMonth() {
-    const firstDay = new Date(year, month, 1).getDay()
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
-    const offset = firstDay === 0 ? 6 : firstDay - 1
-    const days = []
-    for (let i = 0; i < offset; i++) days.push(null)
-    for (let i = 1; i <= daysInMonth; i++) days.push(i)
-    return days
-  }
-
-  function countForDay(day) {
-    if (!day) return 0
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    return appointments.filter(a => a.date === dateStr).length
-  }
-
-  const days = getDaysInMonth()
-  const monthName = viewMonth.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })
-  const todayStr = now.toISOString().split('T')[0]
-
-  async function deleteApt(id) {
-    if (!confirm('Удалить запись?')) return
-    await api.deleteAppointment(id)
-    const start = new Date(year, month, 1).toISOString().split('T')[0]
-    const end = new Date(year, month + 1, 0).toISOString().split('T')[0]
-    const updated = await api.getByDateRange(start, end)
-    setAppointments(updated)
-  }
-
+  const vm = new Date(now.getFullYear(), now.getMonth()+mo, 1)
+  const y=vm.getFullYear(), m=vm.getMonth()
+  useEffect(()=>{
+    const s=new Date(y,m,1).toISOString().split('T')[0], e=new Date(y,m+1,0).toISOString().split('T')[0]
+    api.getByDateRange(s,e).then(setApts)
+  },[y,m])
+  const dayApts = sel ? apts.filter(a=>a.date===sel) : []
+  function days(){const fd=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate(),off=fd===0?6:fd-1,d=[];for(let i=0;i<off;i++)d.push(null);for(let i=1;i<=dim;i++)d.push(i);return d}
+  function cnt(day){if(!day)return 0;const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;return apts.filter(a=>a.date===ds).length}
+  async function del(id){if(!confirm('Удалить?'))return;await api.deleteAppointment(id);const s=new Date(y,m,1).toISOString().split('T')[0],e=new Date(y,m+1,0).toISOString().split('T')[0];setApts(await api.getByDateRange(s,e))}
+  const td=now.toISOString().split('T')[0]
   return (
     <div className="fade-up">
-      {/* Month nav */}
       <div className="flex items-center justify-between mb-5">
-        <button onClick={() => setMonthOffset(m => m - 1)}
-          className="w-9 h-9 rounded-lg border border-white/10 flex items-center justify-center text-white/40 hover:text-white/70 hover:border-white/20 transition-all">‹</button>
-        <h2 className="font-[Cormorant_Garamond] text-xl capitalize">{monthName}</h2>
-        <button onClick={() => setMonthOffset(m => m + 1)}
-          className="w-9 h-9 rounded-lg border border-white/10 flex items-center justify-center text-white/40 hover:text-white/70 hover:border-white/20 transition-all">›</button>
+        <Btn onClick={()=>setMo(p=>p-1)}>‹</Btn>
+        <h2 className="font-[Cormorant_Garamond] text-xl capitalize">{vm.toLocaleDateString('ru-RU',{month:'long',year:'numeric'})}</h2>
+        <Btn onClick={()=>setMo(p=>p+1)}>›</Btn>
       </div>
-
-      {/* Weekday headers */}
-      <div className="grid grid-cols-7 gap-1 mb-1">
-        {['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(d => (
-          <div key={d} className="text-center text-white/25 text-xs py-1">{d}</div>
-        ))}
-      </div>
-
-      {/* Days grid */}
+      <div className="grid grid-cols-7 gap-1 mb-1">{['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(d=><div key={d} className="text-center text-white/25 text-xs py-1">{d}</div>)}</div>
       <div className="grid grid-cols-7 gap-[6px] mb-6">
-        {days.map((day, i) => {
-          if (!day) return <div key={i} />
-          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-          const count = countForDay(day)
-          const isToday = dateStr === todayStr
-          const isSelected = dateStr === selectedDate
-          return (
-            <button key={i} onClick={() => setSelectedDate(dateStr)}
-              style={{ minHeight: '44px' }}
-              className={`relative rounded-lg flex flex-col items-center justify-center text-sm transition-all active:scale-95
-                ${isSelected ? 'bg-[#B8926A] text-[#0E0E0E] font-semibold' : isToday ? 'border border-[#B8926A]/50 text-[#B8926A]' : 'text-white/60 hover:bg-white/5 active:bg-white/10'}`}>
-              {day}
-              {count > 0 && (
-                <div className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-[#0E0E0E]' : 'bg-[#B8926A]'}`} />
-              )}
-            </button>
-          )
-        })}
+        {days().map((day,i)=>{if(!day)return<div key={i}/>;const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`,c=cnt(day),isT=ds===td,isS=ds===sel
+          return(<button key={i} onClick={()=>setSel(ds)} style={{minHeight:'44px'}}
+            className={`relative rounded-lg flex flex-col items-center justify-center text-sm transition-all active:scale-95
+              ${isS?'bg-[#B8926A] text-[#0E0E0E] font-semibold':isT?'border border-[#B8926A]/50 text-[#B8926A]':'text-white/60 hover:bg-white/5'}`}>
+            {day}{c>0&&<div className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${isS?'bg-[#0E0E0E]':'bg-[#B8926A]'}`}/>}
+          </button>)})}
       </div>
-
-      {/* Selected day appointments */}
-      {selectedDate && (
-        <div className="border-t border-white/5 pt-5">
-          <h3 className="text-sm text-white/40 mb-3">
-            {new Date(selectedDate + 'T12:00').toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}
-            <span className="ml-2 text-[#B8926A]">{dayAppts.length} зап.</span>
-          </h3>
-          {dayAppts.length === 0 ? (
-            <p className="text-white/20 text-sm py-6 text-center">Нет записей</p>
-          ) : (
-            <div className="space-y-2">
-              {dayAppts.map(a => (
-                <div key={a.id} className="glass-light rounded-xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-[#B8926A]/10 rounded-lg px-3 py-1.5 text-[#B8926A] font-medium text-sm">{a.time}</div>
-                    <div>
-                      <p className="text-sm font-medium">{a.client_name}</p>
-                      <p className="text-xs text-white/40">
-                        {a.service}
-                        {a.telegram && <> · <a href={`https://t.me/${a.telegram.replace('@','')}`} target="_blank" className="text-[#B8926A]">{a.telegram}</a></>}
-                        {a.phone && <> · <a href={`tel:${a.phone}`} className="text-[#B8926A]">{a.phone}</a></>}
-                      </p>
-                    </div>
-                  </div>
-                  <button onClick={() => deleteApt(a.id)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {sel&&<div className="border-t border-white/5 pt-5">
+        <h3 className="text-sm text-white/40 mb-3">{new Date(sel+'T12:00').toLocaleDateString('ru-RU',{weekday:'long',day:'numeric',month:'long'})} <span className="text-[#B8926A]">{dayApts.length} зап.</span></h3>
+        {dayApts.length===0?<p className="text-white/20 text-sm py-6 text-center">Нет записей</p>:
+        <div className="space-y-2">{dayApts.map(a=><AptCard key={a.id} a={a} onDel={()=>del(a.id)}/>)}</div>}
+      </div>}
     </div>
   )
 }
 
-// ==================== ADD CLIENT TAB ====================
-function AddClientTab() {
-  const [services, setServices] = useState([])
-  const [availDates, setAvailDates] = useState([])
-  const [form, setForm] = useState({ client_name: '', telegram: '', phone: '', service: '', date: '', time: '' })
-  const [bookedSlots, setBookedSlots] = useState([])
+/* ==================== ADD CLIENT ==================== */
+function AddTab() {
+  const [svcs, setSvcs] = useState([])
+  const [dates, setDates] = useState([])
+  const [f, setF] = useState({client_name:'',telegram:'',phone:'',service:'',duration_min:60,date:'',time:''})
+  const [booked, setBooked] = useState([])
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState('')
-
-  useEffect(() => {
-    api.getServices().then(setServices)
-    api.getAvailableDates().then(d => setAvailDates(d.map(x => x.date).sort()))
-  }, [])
-
-  useEffect(() => {
-    if (form.date) api.getBookedSlots(form.date).then(s => setBookedSlots(s || []))
-  }, [form.date])
-
-  async function handleAdd() {
-    setLoading(true); setMsg('')
-    try {
-      await api.createAppointment(form)
-      setMsg('Клиент записан!')
-      setForm({ client_name: '', telegram: '', phone: '', service: '', date: '', time: '' })
-    } catch (e) { setMsg('Ошибка: ' + e.message) }
-    finally { setLoading(false) }
-  }
-
-  const today = new Date().toISOString().split('T')[0]
-  const futureDates = availDates.filter(d => d >= today)
-
+  useEffect(()=>{api.getServices().then(setSvcs);api.getAvailableDates().then(d=>setDates(d.filter(x=>!x.closed).map(x=>x.date).sort()))},[])
+  useEffect(()=>{if(f.date)api.getBookedSlots(f.date).then(s=>setBooked(s||[]))},[f.date])
+  function pickService(name){const s=svcs.find(x=>x.name===name);setF({...f,service:name,duration_min:s?.duration_min||60})}
+  async function add(){setLoading(true);setMsg('');try{await api.createAppointment(f);setMsg('Записан!');setF({client_name:'',telegram:'',phone:'',service:'',duration_min:60,date:'',time:''})}catch(e){setMsg('Ошибка: '+e.message)}finally{setLoading(false)}}
+  const td=new Date().toISOString().split('T')[0],fd=dates.filter(d=>d>=td)
   return (
     <div className="fade-up space-y-4">
-      <h2 className="font-[Cormorant_Garamond] text-2xl mb-2">Добавить клиента</h2>
-      <div>
-        <label className="text-white/40 text-xs mb-1 block">Имя клиента</label>
-        <input type="text" value={form.client_name} onChange={e => setForm({...form, client_name: e.target.value})}
-          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm" />
-      </div>
-      <div>
-        <label className="text-white/40 text-xs mb-1 block">Telegram</label>
-        <input type="text" value={form.telegram} onChange={e => setForm({...form, telegram: e.target.value})}
-          placeholder="@username" className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm" />
-      </div>
-      <div>
-        <label className="text-white/40 text-xs mb-1 block">Телефон</label>
-        <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
-          placeholder="+7 (___) ___-__-__" className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm" />
-      </div>
-      <div>
-        <label className="text-white/40 text-xs mb-1 block">Услуга</label>
-        <select value={form.service} onChange={e => setForm({...form, service: e.target.value})}
-          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm appearance-none">
-          <option value="">Выберите услугу</option>
-          {services.map(s => <option key={s.id} value={s.name}>{s.name} — {s.price}</option>)}
-        </select>
-      </div>
-      <div>
-        <label className="text-white/40 text-xs mb-1 block">Дата</label>
-        <select value={form.date} onChange={e => setForm({...form, date: e.target.value, time: ''})}
-          className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm appearance-none">
-          <option value="">Выберите дату</option>
-          {futureDates.map(d => (
-            <option key={d} value={d}>{new Date(d+'T12:00').toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'long'})}</option>
-          ))}
-        </select>
-      </div>
-      {form.date && (
-        <div>
-          <label className="text-white/40 text-xs mb-2 block">Время</label>
-          <div className="grid grid-cols-5 gap-2">
-            {TIME_SLOTS.map(t => (
-              <button key={t} disabled={bookedSlots.includes(t)}
-                onClick={() => setForm({...form, time: t})}
-                className={`time-btn py-2 rounded-lg border text-sm text-center
-                  ${form.time === t ? 'active' : 'border-white/10 text-white/60'}`}>
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      {msg && <p className={`text-sm ${msg.startsWith('Ошибка') ? 'text-red-400' : 'text-green-400'}`}>{msg}</p>}
-      <button onClick={handleAdd}
-        disabled={!form.client_name || (!form.telegram && !form.phone) || !form.service || !form.date || !form.time || loading}
-        className="w-full py-3 gold-gradient text-[#0E0E0E] font-semibold text-sm rounded-xl disabled:opacity-30 transition-all">
-        {loading ? 'Сохраняем...' : 'Записать клиента'}
-      </button>
+      <h2 className="font-[Cormorant_Garamond] text-2xl mb-2">Записать клиента</h2>
+      <Input l="Имя" v={f.client_name} set={v=>setF({...f,client_name:v})}/>
+      <Input l="Телефон" v={f.phone} set={v=>setF({...f,phone:v})} type="tel" ph="+7..."/>
+      <Input l="Telegram" v={f.telegram} set={v=>setF({...f,telegram:v})} ph="@username"/>
+      <div><label className="text-white/40 text-xs mb-1 block">Услуга</label>
+        <select value={f.service} onChange={e=>pickService(e.target.value)} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm appearance-none">
+          <option value="">Выберите</option>{svcs.map(s=><option key={s.id} value={s.name}>{s.name} — {s.price}</option>)}
+        </select></div>
+      <div><label className="text-white/40 text-xs mb-1 block">Дата</label>
+        <select value={f.date} onChange={e=>setF({...f,date:e.target.value,time:''})} className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm appearance-none">
+          <option value="">Выберите</option>{fd.map(d=><option key={d} value={d}>{new Date(d+'T12:00').toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'long'})}</option>)}
+        </select></div>
+      {f.date&&<div><label className="text-white/40 text-xs mb-2 block">Время</label>
+        <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">{SLOTS.map(t=><button key={t} disabled={booked.includes(t)} onClick={()=>setF({...f,time:t})} style={{touchAction:'manipulation',minHeight:'44px'}}
+          className={`time-btn py-2 rounded-lg border text-sm text-center active:scale-95 ${f.time===t?'active':'border-white/10 text-white/60'}`}>{t}</button>)}</div></div>}
+      {msg&&<p className={`text-sm ${msg.startsWith('Ошибка')?'text-red-400':'text-green-400'}`}>{msg}</p>}
+      <button onClick={add} disabled={!f.client_name||(!f.telegram&&!f.phone)||!f.service||!f.date||!f.time||loading}
+        className="w-full py-3 gold-gradient text-[#0E0E0E] font-semibold text-sm rounded-xl disabled:opacity-30 transition-all">{loading?'Сохраняем...':'Записать'}</button>
     </div>
   )
 }
 
-// ==================== SERVICES TAB ====================
+/* ==================== SERVICES ==================== */
 function ServicesTab() {
-  const [services, setServices] = useState([])
-  const [form, setForm] = useState({ name: '', duration: '', price: '', category: 'color' })
+  const [svcs, setSvcs] = useState([])
+  const [f, setF] = useState({name:'',duration:'',duration_min:60,price:'',category:'color'})
   const [editId, setEditId] = useState(null)
-  const [editForm, setEditForm] = useState({})
+  const [ef, setEf] = useState({})
   const [seeding, setSeeding] = useState(false)
-
-  useEffect(() => { loadServices() }, [])
-
-  async function loadServices() { setServices(await api.getServices()) }
-
-  async function handleAdd() {
-    if (!form.name || !form.price) return
-    await api.createService(form)
-    setForm({ name: '', duration: '', price: '', category: 'color' })
-    loadServices()
-  }
-
-  async function handleUpdate() {
-    await api.updateService(editId, editForm)
-    setEditId(null)
-    loadServices()
-  }
-
-  async function handleDelete(id) {
-    if (!confirm('Удалить услугу?')) return
-    await api.deleteService(id)
-    loadServices()
-  }
-
-  async function seedDefaults() {
-    if (!confirm('Загрузить стандартные услуги? Существующие не удалятся.')) return
-    setSeeding(true)
-    const defaults = [
-      { name: 'Окрашивание корней', duration: '~90 мин', price: '4 500 ₽', category: 'color' },
-      { name: 'Окрашивание корней + Блики', duration: '~210 мин', price: '6 000 ₽', category: 'color' },
-      { name: 'Классическое окрашивание S/M', duration: '~140 мин', price: '6 000 ₽', category: 'color' },
-      { name: 'Классическое окрашивание L', duration: '~150 мин', price: '7 000 ₽', category: 'color' },
-      { name: 'Экстра блонд S/M', duration: '~180 мин', price: '7 000 ₽', category: 'color' },
-      { name: 'Экстра блонд L', duration: '~210 мин', price: '8 000 ₽', category: 'color' },
-      { name: 'Шатуш', duration: '~120 мин', price: '5 000 ₽', category: 'color' },
-      { name: 'Трендовое окрашивание S/M', duration: 'индивидуально', price: 'от 8 500 ₽', category: 'color' },
-      { name: 'Трендовое окрашивание L', duration: 'индивидуально', price: 'от 10 000 ₽', category: 'color' },
-      { name: 'Тотальная перезагрузка цвета', duration: 'индивидуально', price: 'от 10 500 ₽', category: 'color' },
-      { name: 'Индивидуальное окрашивание / Air Touch', duration: 'индивидуально', price: 'от 12 500 ₽', category: 'color' },
-      { name: 'Стрижка с укладкой', duration: '~60 мин', price: '3 000 ₽', category: 'cut' },
-      { name: 'Мужская стрижка', duration: '~80 мин', price: '2 000 ₽', category: 'cut' },
-      { name: 'Укладка', duration: '~60 мин', price: '2 300 ₽', category: 'cut' },
-      { name: 'Окантовка к любой услуге', duration: 'индивидуально', price: '1 000 ₽', category: 'cut' },
-    ]
-    for (const s of defaults) {
-      try { await api.createService(s) } catch(e) {}
-    }
-    await loadServices()
-    setSeeding(false)
-  }
-
+  useEffect(()=>{load()},[])
+  async function load(){setSvcs(await api.getServices())}
+  async function add(){if(!f.name||!f.price)return;await api.createService(f);setF({name:'',duration:'',duration_min:60,price:'',category:'color'});load()}
+  async function upd(){await api.updateService(editId,ef);setEditId(null);load()}
+  async function del(id){if(!confirm('Удалить?'))return;await api.deleteService(id);load()}
+  async function seed(){if(!confirm('Загрузить стандартные?'))return;setSeeding(true)
+    const defs=[
+      {name:'Окрашивание корней',duration:'~90 мин',duration_min:90,price:'4 500 ₽',category:'color'},
+      {name:'Окрашивание корней + Блики',duration:'~210 мин',duration_min:210,price:'6 000 ₽',category:'color'},
+      {name:'Классическое окрашивание S/M',duration:'~140 мин',duration_min:140,price:'6 000 ₽',category:'color'},
+      {name:'Классическое окрашивание L',duration:'~150 мин',duration_min:150,price:'7 000 ₽',category:'color'},
+      {name:'Экстра блонд S/M',duration:'~180 мин',duration_min:180,price:'7 000 ₽',category:'color'},
+      {name:'Экстра блонд L',duration:'~210 мин',duration_min:210,price:'8 000 ₽',category:'color'},
+      {name:'Шатуш',duration:'~120 мин',duration_min:120,price:'5 000 ₽',category:'color'},
+      {name:'Трендовое окрашивание S/M',duration:'индивидуально',duration_min:180,price:'от 8 500 ₽',category:'color'},
+      {name:'Трендовое окрашивание L',duration:'индивидуально',duration_min:210,price:'от 10 000 ₽',category:'color'},
+      {name:'Тотальная перезагрузка цвета',duration:'индивидуально',duration_min:240,price:'от 10 500 ₽',category:'color'},
+      {name:'Индивидуальное окрашивание / Air Touch',duration:'индивидуально',duration_min:240,price:'от 12 500 ₽',category:'color'},
+      {name:'Стрижка с укладкой',duration:'~60 мин',duration_min:60,price:'3 000 ₽',category:'cut'},
+      {name:'Мужская стрижка',duration:'~80 мин',duration_min:80,price:'2 000 ₽',category:'cut'},
+      {name:'Укладка',duration:'~60 мин',duration_min:60,price:'2 300 ₽',category:'cut'},
+      {name:'Окантовка к любой услуге',duration:'индивидуально',duration_min:30,price:'1 000 ₽',category:'cut'},
+    ];for(const s of defs){try{await api.createService(s)}catch(e){}}
+    await load();setSeeding(false)}
   return (
     <div className="fade-up">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="font-[Cormorant_Garamond] text-2xl">Управление услугами</h2>
-        {services.length === 0 && (
-          <button onClick={seedDefaults} disabled={seeding}
-            style={{ touchAction: 'manipulation' }}
-            className="px-4 py-2 text-xs border border-[#B8926A]/30 text-[#B8926A] rounded-lg hover:bg-[#B8926A]/10 active:bg-[#B8926A]/20 transition-all">
-            {seeding ? 'Загрузка...' : 'Загрузить стандартные'}
-          </button>
-        )}
+        <h2 className="font-[Cormorant_Garamond] text-2xl">Услуги</h2>
+        {svcs.length===0&&<button onClick={seed} disabled={seeding} style={{touchAction:'manipulation'}}
+          className="px-4 py-2 text-xs border border-[#B8926A]/30 text-[#B8926A] rounded-lg hover:bg-[#B8926A]/10 active:bg-[#B8926A]/20">{seeding?'Загрузка...':'Загрузить стандартные'}</button>}
       </div>
-
-      {/* Add form */}
       <div className="glass rounded-xl p-4 mb-6 space-y-3">
         <p className="text-white/40 text-xs">Добавить услугу</p>
-        <input type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})}
-          placeholder="Название" className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm" />
-        <div className="grid grid-cols-2 gap-2">
-          <input type="text" value={form.duration} onChange={e => setForm({...form, duration: e.target.value})}
-            placeholder="Длительность" className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm" />
-          <input type="text" value={form.price} onChange={e => setForm({...form, price: e.target.value})}
-            placeholder="Цена" className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm" />
+        <Input v={f.name} set={v=>setF({...f,name:v})} ph="Название"/>
+        <div className="grid grid-cols-3 gap-2">
+          <Input v={f.duration} set={v=>setF({...f,duration:v})} ph="~60 мин"/>
+          <Input v={String(f.duration_min)} set={v=>setF({...f,duration_min:parseInt(v)||0})} ph="Мин" type="number"/>
+          <Input v={f.price} set={v=>setF({...f,price:v})} ph="Цена"/>
         </div>
-        <select value={form.category} onChange={e => setForm({...form, category: e.target.value})}
-          className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm appearance-none">
-          <option value="color">Окрашивание</option>
-          <option value="cut">Стрижка и укладка</option>
-        </select>
-        <button onClick={handleAdd} className="w-full py-2.5 gold-gradient text-[#0E0E0E] font-semibold text-sm rounded-lg">
-          Добавить
-        </button>
+        <select value={f.category} onChange={e=>setF({...f,category:e.target.value})} className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm appearance-none">
+          <option value="color">Окрашивание</option><option value="cut">Стрижка</option></select>
+        <button onClick={add} className="w-full py-2.5 gold-gradient text-[#0E0E0E] font-semibold text-sm rounded-lg">Добавить</button>
       </div>
-
-      {/* List */}
-      <div className="space-y-2">
-        {services.map(s => (
-          <div key={s.id} className="glass-light rounded-xl p-4">
-            {editId === s.id ? (
-              <div className="space-y-2">
-                <input type="text" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})}
-                  className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm" />
-                <div className="grid grid-cols-2 gap-2">
-                  <input type="text" value={editForm.duration} onChange={e => setEditForm({...editForm, duration: e.target.value})}
-                    className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm" />
-                  <input type="text" value={editForm.price} onChange={e => setEditForm({...editForm, price: e.target.value})}
-                    className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm" />
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={handleUpdate} className="flex-1 py-2 bg-[#B8926A] text-[#0E0E0E] text-sm rounded-lg font-medium">Сохранить</button>
-                  <button onClick={() => setEditId(null)} className="px-4 py-2 border border-white/10 text-white/50 text-sm rounded-lg">Отмена</button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm">{s.name}</p>
-                  <p className="text-xs text-white/30">{s.duration} · {s.category === 'color' ? 'Окрашивание' : 'Стрижка'}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[#B8926A] text-sm font-medium">{s.price}</span>
-                  <button onClick={() => { setEditId(s.id); setEditForm({...s}) }}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white/20 hover:text-[#B8926A] hover:bg-[#B8926A]/10 transition-all">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </button>
-                  <button onClick={() => handleDelete(s.id)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+      <div className="space-y-2">{svcs.map(s=><div key={s.id} className="glass-light rounded-xl p-4">
+        {editId===s.id?<div className="space-y-2">
+          <Input v={ef.name} set={v=>setEf({...ef,name:v})}/>
+          <div className="grid grid-cols-3 gap-2"><Input v={ef.duration} set={v=>setEf({...ef,duration:v})}/><Input v={String(ef.duration_min||0)} set={v=>setEf({...ef,duration_min:parseInt(v)||0})} type="number"/><Input v={ef.price} set={v=>setEf({...ef,price:v})}/></div>
+          <div className="flex gap-2"><button onClick={upd} className="flex-1 py-2 bg-[#B8926A] text-[#0E0E0E] text-sm rounded-lg font-medium">Сохранить</button>
+          <button onClick={()=>setEditId(null)} className="px-4 py-2 border border-white/10 text-white/50 text-sm rounded-lg">Отмена</button></div>
+        </div>:<div className="flex items-center justify-between">
+          <div><p className="text-sm">{s.name}</p><p className="text-xs text-white/30">{s.duration} · {s.duration_min}мин · {s.category==='color'?'Окрашивание':'Стрижка'}</p></div>
+          <div className="flex items-center gap-2"><span className="text-[#B8926A] text-sm font-medium whitespace-nowrap">{s.price}</span>
+            <SmBtn onClick={()=>{setEditId(s.id);setEf({...s})}} icon="edit"/><SmBtn onClick={()=>del(s.id)} icon="x" danger/></div>
+        </div>}
+      </div>)}</div>
     </div>
   )
 }
 
-// ==================== DATES TAB ====================
+/* ==================== DATES + CLOSE DAY ==================== */
 function DatesTab() {
   const [dates, setDates] = useState([])
-  const [monthOffset, setMonthOffset] = useState(0)
+  const [mo, setMo] = useState(0)
   const [toggling, setToggling] = useState(null)
-
-  useEffect(() => { loadDates() }, [])
-
-  async function loadDates() {
-    const d = await api.getAvailableDates()
-    setDates(d.map(x => x.date))
-  }
-
-  const now = new Date()
-  const viewMonth = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1)
-  const year = viewMonth.getFullYear()
-  const month = viewMonth.getMonth()
-
-  function getDaysInMonth() {
-    const firstDay = new Date(year, month, 1).getDay()
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
-    const offset = firstDay === 0 ? 6 : firstDay - 1
-    const days = []
-    for (let i = 0; i < offset; i++) days.push(null)
-    for (let i = 1; i <= daysInMonth; i++) days.push(i)
-    return days
-  }
-
-  async function toggleDate(day) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    setToggling(dateStr)
-    try {
-      if (dates.includes(dateStr)) {
-        await api.removeAvailableDate(dateStr)
-        setDates(prev => prev.filter(d => d !== dateStr))
-      } else {
-        await api.addAvailableDate(dateStr)
-        setDates(prev => [...prev, dateStr])
-      }
-    } catch (e) {
-      console.error('Toggle error:', e)
-    }
-    setToggling(null)
-  }
-
-  const days = getDaysInMonth()
-  const monthName = viewMonth.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })
-  const todayStr = now.toISOString().split('T')[0]
-
+  useEffect(()=>{load()},[])
+  async function load(){const d=await api.getAvailableDates();setDates(d)}
+  const now=new Date(),vm=new Date(now.getFullYear(),now.getMonth()+mo,1),y=vm.getFullYear(),m=vm.getMonth()
+  function days(){const fd=new Date(y,m,1).getDay(),dim=new Date(y,m+1,0).getDate(),off=fd===0?6:fd-1,d=[];for(let i=0;i<off;i++)d.push(null);for(let i=1;i<=dim;i++)d.push(i);return d}
+  async function toggle(day){
+    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;setToggling(ds)
+    const existing=dates.find(d=>d.date===ds)
+    if(existing){await api.removeAvailableDate(ds)}else{await api.addAvailableDate(ds)}
+    await load();setToggling(null)}
+  async function closeDay(ds){if(!confirm('Закрыть запись на этот день?'))return;await api.closeDate(ds);load()}
+  async function openDay(ds){await api.openDate(ds);load()}
+  const td=now.toISOString().split('T')[0]
+  const todayDate=dates.find(d=>d.date===td)
   return (
     <div className="fade-up">
       <h2 className="font-[Cormorant_Garamond] text-2xl mb-2">Доступные даты</h2>
-      <p className="text-white/30 text-sm mb-5">Нажмите на день чтобы включить/выключить запись</p>
+      <p className="text-white/30 text-sm mb-4">Нажмите на день для включения/выключения записи</p>
+
+      {/* Close today button */}
+      {todayDate&&!todayDate.closed&&(
+        <button onClick={()=>closeDay(td)} style={{touchAction:'manipulation'}}
+          className="w-full mb-5 py-3 rounded-xl border border-red-500/30 text-red-400 text-sm font-medium hover:bg-red-500/10 active:scale-[0.98] transition-all">
+          Закрыть запись на сегодня
+        </button>
+      )}
+      {todayDate&&todayDate.closed&&(
+        <button onClick={()=>openDay(td)} style={{touchAction:'manipulation'}}
+          className="w-full mb-5 py-3 rounded-xl border border-green-500/30 text-green-400 text-sm font-medium hover:bg-green-500/10 active:scale-[0.98] transition-all">
+          Открыть запись на сегодня
+        </button>
+      )}
 
       <div className="flex items-center justify-between mb-5">
-        <button onClick={() => setMonthOffset(m => m - 1)}
-          className="w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center text-white/40 hover:text-white/70 active:bg-white/10 transition-all">‹</button>
-        <h3 className="text-sm font-medium capitalize">{monthName}</h3>
-        <button onClick={() => setMonthOffset(m => m + 1)}
-          className="w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center text-white/40 hover:text-white/70 active:bg-white/10 transition-all">›</button>
+        <Btn onClick={()=>setMo(p=>p-1)}>‹</Btn>
+        <h3 className="text-sm font-medium capitalize">{vm.toLocaleDateString('ru-RU',{month:'long',year:'numeric'})}</h3>
+        <Btn onClick={()=>setMo(p=>p+1)}>›</Btn>
       </div>
-
-      <div className="grid grid-cols-7 gap-1 mb-1">
-        {['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(d => (
-          <div key={d} className="text-center text-white/25 text-xs py-1">{d}</div>
-        ))}
-      </div>
-      <div className="grid grid-cols-7 gap-[6px]">
-        {days.map((day, i) => {
-          if (!day) return <div key={i} />
-          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-          const isAvailable = dates.includes(dateStr)
-          const isPast = dateStr < todayStr
-          const isLoading = toggling === dateStr
-          return (
-            <button key={i}
-              onClick={() => !isPast && !isLoading && toggleDate(day)}
-              disabled={isPast || isLoading}
-              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', minHeight: '44px' }}
-              className={`rounded-lg flex items-center justify-center text-sm font-medium transition-all active:scale-95
-                ${isPast ? 'text-white/10 cursor-not-allowed' :
-                  isLoading ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 animate-pulse' :
-                  isAvailable ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-                  'text-white/40 hover:bg-white/5 active:bg-white/10 border border-white/10'}`}>
-              {day}
-            </button>
-          )
-        })}
-      </div>
-
-      <div className="flex items-center gap-4 mt-5 text-xs text-white/30">
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded bg-green-500/20 border border-green-500/30" />
-          Запись открыта
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded bg-white/5 border border-white/10" />
-          Запись закрыта
-        </div>
+      <div className="grid grid-cols-7 gap-1 mb-1">{['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(d=><div key={d} className="text-center text-white/25 text-xs py-1">{d}</div>)}</div>
+      <div className="grid grid-cols-7 gap-[6px]">{days().map((day,i)=>{
+        if(!day)return<div key={i}/>;const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+        const rec=dates.find(d=>d.date===ds),isAvail=rec&&!rec.closed,isClosed=rec&&rec.closed,isPast=ds<td,isLoad=toggling===ds
+        return(<button key={i} onClick={()=>!isPast&&!isLoad&&toggle(day)} disabled={isPast||isLoad}
+          style={{touchAction:'manipulation',minHeight:'44px'}}
+          className={`rounded-lg flex items-center justify-center text-sm font-medium transition-all active:scale-95
+            ${isPast?'text-white/10':isLoad?'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 animate-pulse':
+            isClosed?'bg-red-500/15 text-red-400/60 border border-red-500/20 line-through':
+            isAvail?'bg-green-500/20 text-green-400 border border-green-500/30':
+            'text-white/40 hover:bg-white/5 active:bg-white/10 border border-white/10'}`}>{day}</button>)})}</div>
+      <div className="flex items-center gap-4 mt-5 text-xs text-white/30 flex-wrap">
+        <Legend color="green" label="Открыта"/><Legend color="red" label="Закрыта мастером"/><Legend color="gray" label="Не активна"/>
       </div>
     </div>
   )
 }
 
-// ==================== TABLE TAB ====================
-function TableTab() {
-  const [appointments, setAppointments] = useState([])
+/* ==================== ALL RECORDS ==================== */
+function RecordsTab() {
+  const [apts, setApts] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('')
-
-  useEffect(() => {
-    api.getAllAppointments().then(d => { setAppointments(d); setLoading(false) })
-  }, [])
-
-  const filtered = filter
-    ? appointments.filter(a =>
-        a.client_name.toLowerCase().includes(filter.toLowerCase()) ||
-        (a.telegram || '').toLowerCase().includes(filter.toLowerCase()) ||
-        (a.phone || '').toLowerCase().includes(filter.toLowerCase()) ||
-        a.service.toLowerCase().includes(filter.toLowerCase())
-      )
-    : appointments
-
-  async function deleteApt(id) {
-    if (!confirm('Удалить запись?')) return
-    await api.deleteAppointment(id)
-    setAppointments(appointments.filter(a => a.id !== id))
-  }
-
+  useEffect(()=>{api.getAllAppointments().then(d=>{setApts(d);setLoading(false)})},[])
+  const filtered=filter?apts.filter(a=>(a.client_name+a.telegram+a.phone+a.service).toLowerCase().includes(filter.toLowerCase())):apts
+  async function del(id){if(!confirm('Удалить?'))return;await api.deleteAppointment(id);setApts(apts.filter(a=>a.id!==id))}
   return (
     <div className="fade-up">
       <div className="flex items-center justify-between mb-5">
         <h2 className="font-[Cormorant_Garamond] text-2xl">Все записи</h2>
-        <span className="text-[#B8926A] text-sm">{appointments.length} всего</span>
+        <span className="text-[#B8926A] text-sm">{apts.length}</span>
       </div>
-
-      <input type="text" value={filter} onChange={e => setFilter(e.target.value)}
-        placeholder="Поиск по имени, telegram, услуге..."
-        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm mb-4 placeholder:text-white/20" />
-
-      {loading ? (
-        <p className="text-white/30 text-sm text-center py-8">Загрузка...</p>
-      ) : filtered.length === 0 ? (
-        <p className="text-white/20 text-sm text-center py-8">Нет записей</p>
-      ) : (
-        <div className="space-y-2">
-          {filtered.map(a => (
-            <div key={a.id} className="glass-light rounded-xl p-4">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-sm">{a.client_name}</span>
-                    {a.telegram && <a href={`https://t.me/${a.telegram.replace('@','')}`} target="_blank"
-                      className="text-[#B8926A] text-xs">{a.telegram}</a>}
-                    {a.phone && <a href={`tel:${a.phone}`} className="text-[#B8926A] text-xs">{a.phone}</a>}
-                  </div>
-                  <p className="text-xs text-white/40">{a.service}</p>
-                  <p className="text-xs text-white/30">
-                    {new Date(a.date + 'T12:00').toLocaleDateString('ru-RU', { day:'numeric', month:'short', year:'numeric' })} · {a.time}
-                  </p>
-                </div>
-                <button onClick={() => deleteApt(a.id)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all flex-shrink-0">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          ))}
+      <input type="text" value={filter} onChange={e=>setFilter(e.target.value)} placeholder="Поиск..."
+        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm mb-4 placeholder:text-white/20"/>
+      {loading?<p className="text-white/30 text-sm text-center py-8">Загрузка...</p>:
+      filtered.length===0?<p className="text-white/20 text-sm text-center py-8">Нет записей</p>:
+      <div className="space-y-2">{filtered.map(a=><div key={a.id} className="glass-light rounded-xl p-4">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap"><span className="font-medium text-sm">{a.client_name}</span>
+              {a.telegram&&<a href={`https://t.me/${a.telegram.replace('@','')}`} target="_blank" className="text-[#B8926A] text-xs">{a.telegram}</a>}
+              {a.phone&&<a href={`tel:${a.phone}`} className="text-[#B8926A] text-xs">{a.phone}</a>}</div>
+            <p className="text-xs text-white/40">{a.service}{a.duration_min?` · ${a.duration_min}мин`:''}</p>
+            <p className="text-xs text-white/30">{new Date(a.date+'T12:00').toLocaleDateString('ru-RU',{day:'numeric',month:'short',year:'numeric'})} · {a.time}</p>
+          </div>
+          <SmBtn onClick={()=>del(a.id)} icon="trash" danger/>
         </div>
-      )}
+      </div>)}</div>}
     </div>
   )
+}
+
+/* ==================== CLIENTS ==================== */
+function ClientsTab() {
+  const [clients, setClients] = useState([])
+  const [f, setF] = useState({name:'',telegram:'',phone:'',comment:''})
+  const [editId, setEditId] = useState(null)
+  const [ef, setEf] = useState({})
+  const [filter, setFilter] = useState('')
+  useEffect(()=>{load()},[])
+  async function load(){setClients(await api.getClients())}
+  async function add(){if(!f.name)return;await api.createClient(f);setF({name:'',telegram:'',phone:'',comment:''});load()}
+  async function upd(){await api.updateClient(editId,ef);setEditId(null);load()}
+  async function del(id){if(!confirm('Удалить?'))return;await api.deleteClient(id);load()}
+  const filtered=filter?clients.filter(c=>(c.name+c.telegram+c.phone+c.comment).toLowerCase().includes(filter.toLowerCase())):clients
+  return (
+    <div className="fade-up">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="font-[Cormorant_Garamond] text-2xl">Клиенты</h2>
+        <span className="text-[#B8926A] text-sm">{clients.length}</span>
+      </div>
+      <div className="glass rounded-xl p-4 mb-5 space-y-3">
+        <p className="text-white/40 text-xs">Добавить клиента</p>
+        <Input v={f.name} set={v=>setF({...f,name:v})} ph="Имя"/>
+        <div className="grid grid-cols-2 gap-2">
+          <Input v={f.phone} set={v=>setF({...f,phone:v})} ph="Телефон" type="tel"/>
+          <Input v={f.telegram} set={v=>setF({...f,telegram:v})} ph="@telegram"/>
+        </div>
+        <Input v={f.comment} set={v=>setF({...f,comment:v})} ph="Комментарий"/>
+        <button onClick={add} className="w-full py-2.5 gold-gradient text-[#0E0E0E] font-semibold text-sm rounded-lg">Добавить</button>
+      </div>
+      <input type="text" value={filter} onChange={e=>setFilter(e.target.value)} placeholder="Поиск..." className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm mb-4 placeholder:text-white/20"/>
+      <div className="space-y-2">{filtered.map(c=><div key={c.id} className="glass-light rounded-xl p-4">
+        {editId===c.id?<div className="space-y-2">
+          <Input v={ef.name} set={v=>setEf({...ef,name:v})} ph="Имя"/>
+          <div className="grid grid-cols-2 gap-2"><Input v={ef.phone} set={v=>setEf({...ef,phone:v})} ph="Телефон"/><Input v={ef.telegram} set={v=>setEf({...ef,telegram:v})} ph="Telegram"/></div>
+          <Input v={ef.comment} set={v=>setEf({...ef,comment:v})} ph="Комментарий"/>
+          <div className="flex gap-2"><button onClick={upd} className="flex-1 py-2 bg-[#B8926A] text-[#0E0E0E] text-sm rounded-lg font-medium">Сохранить</button>
+          <button onClick={()=>setEditId(null)} className="px-4 py-2 border border-white/10 text-white/50 text-sm rounded-lg">Отмена</button></div>
+        </div>:<div className="flex items-start justify-between">
+          <div className="space-y-1"><p className="text-sm font-medium">{c.name}</p>
+            <div className="flex gap-2 flex-wrap">
+              {c.phone&&<a href={`tel:${c.phone}`} className="text-[#B8926A] text-xs">{c.phone}</a>}
+              {c.telegram&&<a href={`https://t.me/${c.telegram.replace('@','')}`} target="_blank" className="text-[#B8926A] text-xs">{c.telegram}</a>}
+            </div>
+            {c.comment&&<p className="text-xs text-white/30 italic">{c.comment}</p>}
+          </div>
+          <div className="flex gap-1"><SmBtn onClick={()=>{setEditId(c.id);setEf({...c})}} icon="edit"/><SmBtn onClick={()=>del(c.id)} icon="x" danger/></div>
+        </div>}
+      </div>)}</div>
+    </div>
+  )
+}
+
+/* ==================== SUPPLIES ==================== */
+function SuppliesTab() {
+  const [sub, setSub] = useState('paint')
+  const [items, setItems] = useState([])
+  const [f, setF] = useState({type:'paint',brand:'',name:'',quantity:0,price:'',comment:''})
+  const [editId, setEditId] = useState(null)
+  const [ef, setEf] = useState({})
+  useEffect(()=>{load()},[sub])
+  async function load(){setItems(await api.getSuppliesByType(sub))}
+  async function add(){if(!f.brand||!f.name)return;await api.createSupply({...f,type:sub});setF({...f,brand:'',name:'',quantity:0,price:'',comment:''});load()}
+  async function upd(){await api.updateSupply(editId,ef);setEditId(null);load()}
+  async function del(id){if(!confirm('Удалить?'))return;await api.deleteSupply(id);load()}
+  const brands=[...new Set(items.map(i=>i.brand))].sort()
+  return (
+    <div className="fade-up">
+      <h2 className="font-[Cormorant_Garamond] text-2xl mb-4">Расходники</h2>
+      <div className="flex gap-2 mb-5">
+        <button onClick={()=>setSub('paint')} className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${sub==='paint'?'gold-gradient text-[#0E0E0E]':'border border-white/10 text-white/50'}`}>Краски</button>
+        <button onClick={()=>setSub('material')} className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${sub==='material'?'gold-gradient text-[#0E0E0E]':'border border-white/10 text-white/50'}`}>Материалы</button>
+      </div>
+      <div className="glass rounded-xl p-4 mb-5 space-y-3">
+        <p className="text-white/40 text-xs">Добавить {sub==='paint'?'краску':'материал'}</p>
+        <div className="grid grid-cols-2 gap-2"><Input v={f.brand} set={v=>setF({...f,brand:v})} ph="Бренд"/><Input v={f.name} set={v=>setF({...f,name:v})} ph="Название"/></div>
+        <div className="grid grid-cols-2 gap-2"><Input v={String(f.quantity)} set={v=>setF({...f,quantity:parseInt(v)||0})} ph="Кол-во" type="number"/><Input v={f.price} set={v=>setF({...f,price:v})} ph="Стоимость"/></div>
+        <Input v={f.comment} set={v=>setF({...f,comment:v})} ph="Комментарий"/>
+        <button onClick={add} className="w-full py-2.5 gold-gradient text-[#0E0E0E] font-semibold text-sm rounded-lg">Добавить</button>
+      </div>
+      {brands.length===0?<p className="text-white/20 text-sm text-center py-8">Пусто</p>:
+      brands.map(brand=><div key={brand} className="mb-6">
+        <p className="text-[#B8926A] text-xs tracking-[0.15em] uppercase mb-2">{brand}</p>
+        <div className="space-y-2">{items.filter(i=>i.brand===brand).map(item=><div key={item.id} className="glass-light rounded-xl p-4">
+          {editId===item.id?<div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2"><Input v={ef.brand} set={v=>setEf({...ef,brand:v})} ph="Бренд"/><Input v={ef.name} set={v=>setEf({...ef,name:v})} ph="Название"/></div>
+            <div className="grid grid-cols-2 gap-2"><Input v={String(ef.quantity)} set={v=>setEf({...ef,quantity:parseInt(v)||0})} ph="Кол-во" type="number"/><Input v={ef.price} set={v=>setEf({...ef,price:v})} ph="Цена"/></div>
+            <Input v={ef.comment} set={v=>setEf({...ef,comment:v})} ph="Комментарий"/>
+            <div className="flex gap-2"><button onClick={upd} className="flex-1 py-2 bg-[#B8926A] text-[#0E0E0E] text-sm rounded-lg font-medium">Сохранить</button>
+            <button onClick={()=>setEditId(null)} className="px-4 py-2 border border-white/10 text-white/50 text-sm rounded-lg">Отмена</button></div>
+          </div>:<div className="flex items-start justify-between">
+            <div className="space-y-0.5"><p className="text-sm">{item.name}</p>
+              <p className="text-xs text-white/40">Кол-во: <span className={item.quantity<3?'text-red-400':'text-white/60'}>{item.quantity}</span>{item.price&&` · ${item.price}`}</p>
+              {item.comment&&<p className="text-xs text-white/25 italic">{item.comment}</p>}
+            </div>
+            <div className="flex gap-1"><SmBtn onClick={()=>{setEditId(item.id);setEf({...item})}} icon="edit"/><SmBtn onClick={()=>del(item.id)} icon="x" danger/></div>
+          </div>}
+        </div>)}</div>)}
+    </div>
+  )
+}
+
+/* ==================== SHARED COMPONENTS ==================== */
+function AptCard({a, onDel}) {
+  return (<div className="glass-light rounded-xl p-4 flex items-center justify-between">
+    <div className="flex items-center gap-3">
+      <div className="bg-[#B8926A]/10 rounded-lg px-3 py-1.5 text-[#B8926A] font-medium text-sm">{a.time}</div>
+      <div><p className="text-sm font-medium">{a.client_name}</p>
+        <p className="text-xs text-white/40">{a.service}{a.duration_min?` · ${a.duration_min}мин`:''}
+          {a.telegram&&<> · <a href={`https://t.me/${a.telegram.replace('@','')}`} target="_blank" className="text-[#B8926A]">{a.telegram}</a></>}
+          {a.phone&&<> · <a href={`tel:${a.phone}`} className="text-[#B8926A]">{a.phone}</a></>}
+        </p></div>
+    </div><SmBtn onClick={onDel} icon="trash" danger/>
+  </div>)
+}
+
+function Input({l, v, set, ph, type='text'}) {
+  return (<div>{l&&<label className="text-white/40 text-xs mb-1 block">{l}</label>}
+    <input type={type} value={v} onChange={e=>set(e.target.value)} placeholder={ph}
+      className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-white text-sm placeholder:text-white/20"/></div>)
+}
+
+function Btn({onClick, children}) {
+  return <button onClick={onClick} style={{touchAction:'manipulation'}}
+    className="w-10 h-10 rounded-lg border border-white/10 flex items-center justify-center text-white/40 hover:text-white/70 active:bg-white/10 transition-all">{children}</button>
+}
+
+function SmBtn({onClick, icon, danger}) {
+  const paths={edit:'M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z',
+    x:'M6 18L18 6M6 6l12 12',trash:'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'}
+  return <button onClick={onClick} style={{touchAction:'manipulation'}}
+    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all flex-shrink-0
+      ${danger?'text-white/20 hover:text-red-400 hover:bg-red-500/10':'text-white/20 hover:text-[#B8926A] hover:bg-[#B8926A]/10'}`}>
+    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={paths[icon]}/></svg></button>
+}
+
+function Legend({color, label}) {
+  const cls={green:'bg-green-500/20 border-green-500/30',red:'bg-red-500/15 border-red-500/20',gray:'bg-white/5 border-white/10'}
+  return <div className="flex items-center gap-1.5"><div className={`w-3 h-3 rounded border ${cls[color]}`}/>{label}</div>
 }
