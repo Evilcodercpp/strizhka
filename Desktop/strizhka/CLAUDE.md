@@ -107,6 +107,38 @@ internal/
 - Не изменять структуру БД без AutoMigrate в `main.go`
 - После изменений в backend — проверять `go build ./...`
 
-## Деплой — пошаговая инструкция
+## Деплой на сервер (83.166.247.120)
 
-См. раздел ниже в этом файле.
+Сервер управляется через **systemd**, не Docker.
+Проект лежит в `/app/barber-backend/`.
+
+### Каждый раз при обновлении backend
+
+**1. Локально — собрать бинарник под Linux:**
+```bash
+cd barber-backend
+GOOS=linux GOARCH=amd64 go build -o barber-backend-linux cmd/server/main.go
+```
+
+**2. Локально — запушить код и скопировать бинарник:**
+```bash
+git add . && git commit -m "..." && git push origin main
+scp barber-backend-linux root@83.166.247.120:/app/barber-backend/
+```
+
+**3. На сервере — перезапустить:**
+```bash
+ssh root@83.166.247.120
+cd /app/barber-backend && git pull origin main
+systemctl restart barber-backend
+journalctl -u barber-backend -f
+```
+
+### Полезные команды на сервере
+
+```bash
+systemctl status barber-backend     # статус
+systemctl restart barber-backend    # перезапуск
+journalctl -u barber-backend -f     # логи в реальном времени
+journalctl -u barber-frontend -f    # логи фронтенда
+```
